@@ -1,0 +1,51 @@
+name: DM Daily Digest
+
+on:
+  schedule:
+    # 8:00 AM IST = 2:30 AM UTC
+    - cron: "30 2 * * *"
+  workflow_dispatch:   # lets you run it manually anytime from GitHub
+
+jobs:
+  send-digest:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      # Cache token usage file between runs so monthly totals persist
+      - name: Restore token usage cache
+        uses: actions/cache@v4
+        with:
+          path: token_usage.json
+          key: token-usage-${{ github.run_id }}
+          restore-keys: |
+            token-usage-
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install feedparser requests
+
+      - name: Run digest script
+        env:
+          ANTHROPIC_API_KEY:   ${{ secrets.ANTHROPIC_API_KEY }}
+          GMAIL_ADDRESS:       ${{ secrets.GMAIL_ADDRESS }}
+          GMAIL_APP_PASSWORD:  ${{ secrets.GMAIL_APP_PASSWORD }}
+          RECIPIENT_EMAIL:     ${{ secrets.RECIPIENT_EMAIL }}
+          LINKEDIN_TOKEN:      ${{ secrets.LINKEDIN_TOKEN }}
+          INSTAGRAM_TOKEN:     ${{ secrets.INSTAGRAM_TOKEN }}
+          INSTAGRAM_USER_ID:   ${{ secrets.INSTAGRAM_USER_ID }}
+        run: python digest.py
+
+      # Save updated token usage so monthly counter persists
+      - name: Save token usage cache
+        if: always()
+        uses: actions/cache@v4
+        with:
+          path: token_usage.json
+          key: token-usage-${{ github.run_id }}
