@@ -6,6 +6,9 @@ on:
     - cron: "30 2 * * *"
   workflow_dispatch:  # lets you run it manually anytime from GitHub
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   send-digest:
     runs-on: ubuntu-latest
